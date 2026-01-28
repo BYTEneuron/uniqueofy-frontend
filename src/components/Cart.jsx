@@ -1,9 +1,11 @@
 import { useCart } from '../context/CartContext'
+import { useNavigate } from 'react-router-dom'
 import './cart.css'
 import cartIcon from '../assets/icons/cart.svg'
 
 export default function Cart() {
   const { cart, removeFromCart, updateQuantity } = useCart()
+  const navigate = useNavigate()
 
   if (cart.length === 0) {
     return (
@@ -62,7 +64,7 @@ export default function Cart() {
       </div>
 
       <div className="cart-summary">
-        <button className="checkout-btn">
+        <button className="checkout-btn" onClick={() => navigate('/cart')}>
           Proceed to Checkout
         </button>  
       </div>

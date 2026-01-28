@@ -1,0 +1,235 @@
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { useCart } from '../context/CartContext'
+import './cartPage.css'
+
+export default function CartPage() {
+  const { cart, removeFromCart, updateQuantity } = useCart()
+  const navigate = useNavigate()
+
+  const [formData, setFormData] = useState({
+    fullName: '',
+    mobile: '',
+    address: '',
+    date: '',
+    timeSlot: '',
+    instructions: ''
+  })
+
+  const [errors, setErrors] = useState({})
+
+  if (cart.length === 0) {
+    return (
+      <div className="cart-page">
+        <h1 className="cart-page-title">Your Booking Request</h1>
+        <div className="cart-page-section empty-cart-message">
+          <p>Your cart is empty.</p>
+          <Link to="/">Browse Services</Link>
+        </div>
+      </div>
+    )
+  }
+
+  const handleChange = (e) => {
+    const { name, value } = e.target
+    
+    // Custom handling based on field type
+    let processedValue = value
+
+    if (name === 'fullName') {
+      // Allow only letters and spaces, replace multiple spaces with single space (>1), prevent leading space
+      processedValue = value
+        .replace(/[^a-zA-Z ]/g, "")
+        .replace(/\s{2,}/g, " ")
+        .replace(/^\s+/g, "")
+    } else if (name === 'mobile') {
+      // Allow only numbers
+      processedValue = value.replace(/\D/g, '')
+    }
+
+    setFormData(prev => ({ ...prev, [name]: processedValue }))
+    
+    // Clear error when user types
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: null }))
+    }
+  }
+
+  const validate = () => {
+    const newErrors = {}
+    
+    // Name validation
+    if (!formData.fullName.trim()) {
+      newErrors.fullName = 'Full Name is required'
+    } else if (!/^[A-Za-z]+(?: [A-Za-z]+)*$/.test(formData.fullName.trim())) {
+      newErrors.fullName = 'Name should contain only letters'
+    }
+
+    // Mobile validation
+    if (!formData.mobile.trim()) {
+      newErrors.mobile = 'Mobile Number is required'
+    } else if (!/^[0-9]{10}$/.test(formData.mobile)) {
+      newErrors.mobile = 'Please enter a valid 10-digit Indian mobile number'
+    }
+
+    if (!formData.address.trim()) newErrors.address = 'Address is required'
+    if (!formData.date) newErrors.date = 'Preferred Date is required'
+    if (!formData.timeSlot) newErrors.timeSlot = 'Please select a preferred time slot'
+    
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSubmit = () => {
+    if (validate()) {
+      // In a real app, send data to backend here
+      console.log('Booking Data:', { cart, customer: formData })
+      navigate('/confirmation')
+    }
+  }
+
+  // Get today's date for min attribute
+  const today = new Date().toISOString().split('T')[0]
+
+  return (
+    <div className="cart-page">
+      <h1 className="cart-page-title">Your Booking Request</h1>
+
+      {/* Cart Items Section */}
+      <div className="cart-page-section">
+        <h3>Services</h3>
+        
+        {cart.map(item => (
+          <div key={item.id} className="cart-page-item">
+            <img src={item.image} alt={item.name} className="cart-item-img" />
+            
+            <div className="cart-item-details">
+              <h4>{item.name}</h4>
+              <p className="cart-item-duration">{item.duration}</p>
+              <p className="cart-item-price-placeholder">Price will be discussed</p>
+            </div>
+
+            <div className="cart-item-actions">
+              {!item.isCustom && (
+                <div className="quantity-selector">
+                  <button 
+                    className="qty-btn"
+                    onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
+                  >
+                    −
+                  </button>
+                  <span className="qty-display">{item.quantity}</span>
+                  <button 
+                    className="qty-btn"
+                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                  >
+                    +
+                  </button>
+                </div>
+              )}
+              
+              <button 
+                className="remove-btn" 
+                onClick={() => removeFromCart(item.id)}
+              >
+                Remove
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Special Instructions Section */}
+      <div className="cart-page-section">
+        <h3>Special Instructions (Optional)</h3>
+        <textarea
+          name="instructions"
+          className="form-control"
+          placeholder="“Please call before arrival”, “Bring ladder”"
+          value={formData.instructions}
+          onChange={handleChange}
+        />
+      </div>
+
+      {/* Customer Details Section */}
+      <div className="cart-page-section">
+        <h3>Customer Details</h3>
+        
+        <div className="form-group">
+          <label>Full Name *</label>
+          <input
+            type="text"
+            name="fullName"
+            className="form-control"
+            value={formData.fullName}
+            onChange={handleChange}
+          />
+          {errors.fullName && <div className="inline-error">{errors.fullName}</div>}
+        </div>
+
+        <div className="form-group">
+          <label>Mobile Number *</label>
+          <div className="phone-input-wrapper">
+            <span className="country-code">🇮🇳 +91</span>
+            <input
+              type="tel"
+              name="mobile"
+              maxLength="10"
+              pattern="[0-9]{10}"
+              className="form-control"
+              value={formData.mobile}
+              onChange={handleChange}
+            />
+          </div>
+          {errors.mobile && <div className="inline-error">{errors.mobile}</div>}
+        </div>
+
+        <div className="form-group">
+          <label>Address *</label>
+          <textarea
+            name="address"
+            className="form-control"
+            value={formData.address}
+            onChange={handleChange}
+          />
+          {errors.address && <div className="inline-error">{errors.address}</div>}
+        </div>
+
+        <div className="form-group">
+          <label>Preferred Service Date *</label>
+          <input
+            type="date"
+            name="date"
+            min={today}
+            className="form-control"
+            value={formData.date}
+            onChange={handleChange}
+          />
+          {errors.date && <div className="inline-error">{errors.date}</div>}
+        </div>
+
+        <div className="form-group">
+          <label>Preferred Time Slot *</label>
+          <select
+            name="timeSlot"
+            className="form-control"
+            value={formData.timeSlot}
+            onChange={handleChange}
+          >
+            <option value="">Select a time slot</option>
+            <option value="Morning (9am–12pm)">Morning (9am–12pm)</option>
+            <option value="Afternoon (12pm–4pm)">Afternoon (12pm–4pm)</option>
+            <option value="Evening (4pm–7pm)">Evening (4pm–7pm)</option>
+          </select>
+          {errors.timeSlot && <div className="inline-error">{errors.timeSlot}</div>}
+        </div>
+      </div>
+
+      <div className="cart-page-footer">
+        <button className="confirm-btn" onClick={handleSubmit}>
+          Confirm Booking Request
+        </button>
+      </div>
+    </div>
+  )
+}

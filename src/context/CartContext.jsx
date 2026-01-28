@@ -44,6 +44,10 @@ export function CartProvider({ children }) {
     return cart.reduce((count, item) => count + item.quantity, 0)
   }
 
+  const getServiceCount = () => {
+    return cart.length
+  }
+
   const clearCart = () => {
     setCart([])
   }
@@ -56,6 +60,7 @@ export function CartProvider({ children }) {
       updateQuantity,
       getTotal,
       getCartCount,
+      getServiceCount,
       clearCart,
     }}>
       {children}

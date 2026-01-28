@@ -1,0 +1,179 @@
+.cart-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  color: #213547;
+}
+
+.cart-page-title {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 40px;
+  color: #213547;
+}
+
+.cart-page-section {
+  background: white;
+  border: 1px solid #e6e9ef;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.cart-page-section h3 {
+  margin-top: 0;
+  margin-bottom: 20px;
+  font-size: 1.25rem;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 12px;
+}
+
+/* Cart Items */
+.cart-page-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cart-page-item:last-child {
+  border-bottom: none;
+}
+
+.cart-item-img {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: #f9f9f9;
+}
+
+.cart-item-details {
+  flex: 1;
+}
+
+.cart-item-details h4 {
+  margin: 0 0 4px 0;
+  font-size: 1.1rem;
+}
+
+.cart-item-duration {
+  font-size: 0.9rem;
+  color: #666;
+  margin: 0 0 4px 0;
+}
+
+.cart-item-price-placeholder {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #000;
+}
+
+.cart-item-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Form Styles */
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.form-control {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #000;
+}
+
+textarea.form-control {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.inline-error {
+  color: #d32f2f;
+  font-size: 0.85rem;
+  margin-top: 4px;
+}
+
+/* Footer / Button */
+.cart-page-footer {
+  margin-top: 32px;
+}
+
+.confirm-btn {
+  width: 100%;
+  padding: 16px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.confirm-btn:hover {
+  background: #333;
+}
+
+.empty-cart-message {
+  text-align: center;
+  padding: 40px;
+}
+
+.empty-cart-message a {
+  color: #000;
+  text-decoration: underline;
+}
+
+/* Phone Number Input Styling */
+.phone-input-wrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e6e9ef;
+  border-radius: 6px;
+  overflow: hidden;
+  background: white;
+}
+
+.country-code {
+  background: #f8fafc;
+  padding: 12px 12px;
+  font-size: 0.95rem;
+  color: #213547;
+  font-weight: 600;
+  border-right: 1px solid #e6e9ef;
+}
+
+.phone-input-wrapper input {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: white;
+  color: #213547;
+  outline: none;
+  font-family: inherit;
+  font-size: 1rem;
+}
+

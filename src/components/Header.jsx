@@ -5,8 +5,8 @@ import logo from '../assets/logos/uniqueofy-logo.svg'
 import cartIcon from '../assets/icons/cart.svg'
 
 export default function Header() {
-  const { getCartCount } = useCart()
-  const cartCount = getCartCount()
+  const { getServiceCount } = useCart()
+  const cartCount = getServiceCount()
 
   return (
     <header className="site-header">
@@ -24,12 +24,12 @@ export default function Header() {
           </button>
 
           <div className="cart-icon-wrapper">
-            <button className="cart-icon-btn">
+            <Link to="/cart" className="cart-icon-btn">
               <img src={cartIcon} alt="Cart" className="cart-icon-svg" />
               {cartCount > 0 && (
                 <span className="cart-badge">{cartCount}</span>
               )}
-            </button>
+            </Link>
           </div>
         </div>
       </div>
