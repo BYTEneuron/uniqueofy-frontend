@@ -5,11 +5,12 @@ import ServiceDetail from './pages/ServiceDetail'
 import Booking from './pages/Booking'
 import Payment from './pages/Payment'
 import Confirmation from './pages/Confirmation'
+import { CartProvider } from './context/CartContext'
 import { Routes, Route } from 'react-router-dom'
 
 function App() {
   return (
-    <>
+    <CartProvider>
       <Header />
 
       <main className="app-main">
@@ -21,7 +22,7 @@ function App() {
           <Route path="/confirmation" element={<Confirmation />} />
         </Routes>
       </main>
-    </>
+    </CartProvider>
   )
 }
 

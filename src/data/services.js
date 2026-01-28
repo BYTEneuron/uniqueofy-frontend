@@ -1,50 +1,78 @@
-/**
- * Mock services for Uniqueofy platform
- * Each service object includes: id, name, category, price, duration, description, image
- * Branding: trusted, verified professionals, at-home service, fixed pricing
- */
+import acServicingImg from '../assets/images/services/ac-servicing.webp'
+import acInstallationImg from '../assets/images/services/ac-installation.webp'
+import tank500lImg from '../assets/images/services/tank-500l.webp'
+import tank1000lImg from '../assets/images/services/tank-1000l.webp'
+import tank2000lImg from '../assets/images/services/tank-2000l.webp'
+import customTankImg from '../assets/images/services/tank-custom.webp'
+import acCustomImg from '../assets/images/services/ac-custom.webp'
 
-export const services = [
+export const acServices = [
   {
-    id: "ac-repair",
-    name: 'AC Repair',
-    category: 'Home Repair',
-    price: 1999,
-    duration: "60–90 mins",
-    description:
-      'Trusted, verified professionals providing at-home AC repair with transparent, fixed pricing and a workmanship guarantee.',
-    image: '/images/ac-repair.jpg',
-  },
-  {
-    id: "deep-cleaning",
-    name: 'Deep Home Cleaning',
-    category: 'Cleaning',
-    price: 1499,
-    duration: "3–5 hours",
-    description:
-      'Deep home cleaning by trusted, verified professionals — at-home service with fixed pricing and a satisfaction promise.',
-    image: '/images/deep-home-cleaning.jpg',
-  },
-  {
-    id: "salon-men",
-    name: 'Salon for Men',
-    category: 'Salon',
-    price: 399,
+    id: "ac-servicing",
+    name: 'AC Servicing',
+    category: 'AC Services',
+    price: 299,
     duration: "45–60 mins",
-    description:
-      'Professional at-home grooming for men from trusted, verified stylists, delivered with fixed pricing and reliable service.',
-    image: '/images/salon-men.jpg',
+    description: 'Professional AC servicing and maintenance',
+    image: acServicingImg,
   },
   {
-    id: "salon-women",
-    name: 'Salon for Women',
-    category: 'Salon',
-    price: 599,
-    duration: "60–90 mins",
-    description:
-      'At-home salon services for women by trusted, verified stylists with clear, fixed pricing and professional results.',
-    image: '/images/salon-women.jpg',
+    id: "ac-installation",
+    name: 'AC Installation',
+    category: 'AC Services',
+    price: 1999,
+    duration: "2–3 hours",
+    description: 'Expert AC installation service',
+    image: acInstallationImg,
   },
+  {
+    id: "ac-custom-request",
+    name: "Custom AC Request",
+    category: "AC Services",
+    duration: "Flexible",
+    description: "For any AC service not listed, request a custom quote.",
+    image: acCustomImg,
+    isCustom: true,
+    price: 0
+  }
 ];
 
-export default services;
+export const waterTankServices = [
+  {
+    id: "water-tank-500l",
+    name: "500L Water Tank Cleaning",
+    category: 'Water Tank Cleaning',
+    duration: "1–2 hours",
+    price: 399,
+    description: "Professional cleaning for 500L water tank",
+    image: tank500lImg
+  },
+  {
+    id: "water-tank-1000l",
+    name: "1000L Water Tank Cleaning",
+    category: 'Water Tank Cleaning',
+    duration: "2–3 hours",
+    price: 699,
+    description: "Professional cleaning for 1000L water tank",
+    image: tank1000lImg
+  },
+  {
+    id: "water-tank-2000l",
+    name: "2000L Water Tank Cleaning",
+    category: 'Water Tank Cleaning',
+    duration: "3–4 hours",
+    price: 999,
+    description: "Professional cleaning for 2000L water tank",
+    image: tank2000lImg
+  },
+  {
+    id: "water-tank-custom",
+    name: "Custom Size Water Tank",
+    category: 'Water Tank Cleaning',
+    duration: "Flexible",
+    price: 0,
+    description: "Contact us for custom size water tank cleaning quotes.",
+    image: customTankImg,
+    isCustom: true
+  }
+];

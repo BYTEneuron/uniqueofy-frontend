@@ -1,0 +1,122 @@
+.service-card-modern {
+  background: white;
+  border: 1px solid #e6e9ef;
+  border-radius: 10px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: box-shadow 0.3s, transform 0.2s;
+}
+
+.service-card-modern:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+.service-image-wrapper {
+  width: 100%;
+  height: 140px;
+  overflow: hidden;
+  background: #f0f7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.service-image-modern {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  transform: scale(var(--service-img-scale));
+}
+
+.service-card-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.service-card-title {
+  margin: 0 0 6px 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #213547;
+}
+
+.service-card-duration {
+  margin: 0 0 12px 0;
+  font-size: 0.85rem;
+  color: #888;
+}
+
+.service-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: auto;
+}
+
+.service-card-price {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+.btn-add {
+  background: #000000;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-add:hover {
+  background: #333333;
+}
+
+.full-width {
+  width: 100%;
+  padding: 10px 0;
+  font-size: 1rem;
+}
+
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid #e6e9ef;
+  border-radius: 6px;
+  padding: 4px 8px;
+}
+
+.qty-btn {
+  background: none;
+  border: none;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.qty-btn:hover {
+  background: #f0f0f0;
+}
+
+.qty-display {
+  width: 28px;
+  text-align: center;
+  font-weight: 600;
+  color: #213547;
+}
