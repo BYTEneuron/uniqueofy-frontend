@@ -17,6 +17,16 @@
   --category-img-scale: 1;
 }
 
+.clickable-hover {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.clickable-hover:hover {
+  opacity: 0.8;
+  transform: translateY(-1px);
+}
+
 a {
   font-weight: 500;
   color: #000000;

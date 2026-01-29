@@ -1,0 +1,117 @@
+.auth-container {
+  max-width: 450px;
+  margin: 60px auto;
+  padding: 40px 24px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e6e9ef;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  color: #213547;
+}
+
+.auth-title {
+  font-size: 1.8rem;
+  margin-bottom: 32px;
+  color: #213547;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.auth-field label {
+  display: block;
+  text-align: left;
+  margin-bottom: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+/* Phone Input Styling - Reusing logic from CartPage */
+.auth-phone-wrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e6e9ef;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.auth-country-code {
+  background: #f8fafc;
+  padding: 12px 14px;
+  font-size: 1rem;
+  color: #213547;
+  font-weight: 600;
+  border-right: 1px solid #e6e9ef;
+}
+
+.auth-input-tel {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  background: white;
+  color: #213547;
+  outline: none;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+/* Standard Input */
+.auth-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #e6e9ef;
+  border-radius: 8px;
+  font-size: 1rem;
+  color: #213547;
+  outline: none;
+  background: white;
+  box-sizing: border-box;
+}
+
+.auth-input:focus,
+.auth-phone-wrapper:focus-within {
+  border-color: #000;
+}
+
+.auth-helper-text {
+  margin-top: 16px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Buttons */
+.auth-btn {
+  width: 100%;
+  padding: 14px;
+  background: #000;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 10px;
+}
+
+.auth-btn:hover {
+  background: #333;
+}
+
+.auth-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Error Message */
+.auth-error {
+  color: #d32f2f;
+  font-size: 0.9rem;
+  margin-top: 8px;
+  text-align: left;
+}

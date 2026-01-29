@@ -1,11 +1,14 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
 import './cartPage.css'
 
 export default function CartPage() {
   const { cart, removeFromCart, updateQuantity } = useCart()
+  const { isLoggedIn, user } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [formData, setFormData] = useState({
     fullName: '',
@@ -17,18 +20,6 @@ export default function CartPage() {
   })
 
   const [errors, setErrors] = useState({})
-
-  if (cart.length === 0) {
-    return (
-      <div className="cart-page">
-        <h1 className="cart-page-title">Your Booking Request</h1>
-        <div className="cart-page-section empty-cart-message">
-          <p>Your cart is empty.</p>
-          <Link to="/">Browse Services</Link>
-        </div>
-      </div>
-    )
-  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -81,12 +72,36 @@ export default function CartPage() {
   }
 
   const handleSubmit = () => {
+    if (!isLoggedIn) {
+      localStorage.setItem('pendingBookingForm', JSON.stringify(formData))
+      navigate('/login', { state: { from: location.pathname } })
+      return
+    }
+
     if (validate()) {
       // In a real app, send data to backend here
       console.log('Booking Data:', { cart, customer: formData })
+      localStorage.removeItem('pendingBookingForm')
       navigate('/confirmation')
     }
   }
+
+  // Restore pending form data if exists
+  useEffect(() => {
+    const savedForm = localStorage.getItem('pendingBookingForm')
+    if (savedForm) {
+      setFormData(prev => ({ ...prev, ...JSON.parse(savedForm) }))
+      // Clear it immediately so it doesn't persist on reload/logout
+      localStorage.removeItem('pendingBookingForm')
+    }
+  }, [])
+
+  // Pre-fill mobile number if logged in
+  useEffect(() => {
+    if (isLoggedIn && user?.phone) {
+      setFormData(prev => ({ ...prev, mobile: user.phone }))
+    }
+  }, [isLoggedIn, user])
 
   // Get today's date for min attribute
   const today = new Date().toISOString().split('T')[0]
@@ -95,8 +110,15 @@ export default function CartPage() {
     <div className="cart-page">
       <h1 className="cart-page-title">Your Booking Request</h1>
 
-      {/* Cart Items Section */}
-      <div className="cart-page-section">
+      {cart.length === 0 ? (
+        <div className="cart-page-section empty-cart-message">
+          <p>Your cart is empty.</p>
+          <Link to="/">Browse Services</Link>
+        </div>
+      ) : (
+        <>
+          {/* Cart Items Section */}
+          <div className="cart-page-section">
         <h3>Services</h3>
         
         {cart.map(item => (
@@ -226,10 +248,12 @@ export default function CartPage() {
       </div>
 
       <div className="cart-page-footer">
-        <button className="confirm-btn" onClick={handleSubmit}>
+        <button className="confirm-btn clickable-hover" onClick={handleSubmit}>
           Confirm Booking Request
         </button>
       </div>
+        </>
+      )}
     </div>
   )
 }
