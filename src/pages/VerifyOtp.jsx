@@ -6,18 +6,21 @@ import './auth.css'
 export default function VerifyOtp() {
   const [otp, setOtp] = useState('')
   const [error, setError] = useState('')
-  const { verifyOtp, tempPhone, isLoggedIn } = useAuth()
+  const { verifyOtp, finalizeLogin, tempPhone, isLoggedIn } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const redirectPath = location.state?.from || '/'
+  
+  // From state logic
+  const fromFlow = location.state?.from || 'login' // 'login' or 'signup'
+  const nextPath = location.state?.next || '/'
 
   useEffect(() => {
     if (isLoggedIn) {
-      navigate(redirectPath, { replace: true })
+      navigate(nextPath, { replace: true })
     } else if (!tempPhone) {
       navigate('/login')
     }
-  }, [tempPhone, isLoggedIn, navigate, redirectPath])
+  }, [tempPhone, isLoggedIn, navigate, nextPath])
 
   const handleOtpChange = (e) => {
     // Only numbers
@@ -38,7 +41,18 @@ export default function VerifyOtp() {
     const isSuccess = verifyOtp(otp)
     
     if (isSuccess) {
-      navigate('/profile-setup', { state: { from: redirectPath } })
+      if (fromFlow === 'login') {
+         // Existing user - log them in directly
+         const loggedIn = finalizeLogin()
+         if (loggedIn) {
+             navigate(nextPath, { replace: true })
+         } else {
+             setError("Error logging in. Please try again.")
+         }
+      } else {
+         // New user (signup) - go to profile setup
+         navigate('/profile-setup', { state: { from: nextPath } })
+      }
     } else {
       setError('Invalid OTP. Please try again.')
     }

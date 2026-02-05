@@ -3,20 +3,20 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import './auth.css'
 
-export default function Login() {
+export default function Signup() {
   const [mobile, setMobile] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const { login, isLoggedIn } = useAuth()
+  const { signup, isLoggedIn } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const redirectPath = location.state?.from || '/'
+  const nextPath = location.state?.next || '/'
 
   useEffect(() => {
     if (isLoggedIn) {
-      navigate(redirectPath, { replace: true })
+      navigate('/', { replace: true })
     }
-  }, [isLoggedIn, navigate, redirectPath])
+  }, [isLoggedIn, navigate])
 
   const handleMobileChange = (e) => {
     // Only numbers
@@ -28,7 +28,7 @@ export default function Login() {
     }
   }
 
-  const handleSendOtp = async () => {
+  const handleSendOtp = () => {
     if (!mobile) {
       setError('Mobile number is required')
       return
@@ -41,33 +41,22 @@ export default function Login() {
     setIsLoading(true)
     setError('')
 
-    // Simulate API call
     setTimeout(() => {
-        const response = login(mobile)
+        const response = signup(mobile)
         
         if (response.success) {
-            navigate('/verify-otp', { state: { from: 'login', next: redirectPath } })
+            // Pass state indicating we represent a Signup flow
+            navigate('/verify-otp', { state: { from: 'signup', next: nextPath } })
         } else {
-            // Show error and link to signup
             setIsLoading(false)
-            setError(
-                <span>
-                    No account found with this number.{' '}
-                    <span 
-                        style={{ color: '#2874f0', cursor: 'pointer', fontWeight: 'bold', textDecoration: 'underline' }}
-                        onClick={() => navigate('/signup', { state: { next: redirectPath } })}
-                    >
-                        If you are a new user, please Sign Up.
-                    </span>
-                </span>
-            )
+            setError(response.message)
         }
     }, 1000)
   }
 
   return (
     <div className="auth-container">
-      <h1 className="auth-title">Login to Continue</h1>
+      <h1 className="auth-title">Create Account</h1>
       
       <div className="auth-form">
         <div className="auth-field">
@@ -87,7 +76,7 @@ export default function Login() {
         </div>
 
         <p className="auth-helper-text">
-          We will send you a One Time Password (OTP) to this mobile number.
+          We will send you a One Time Password (OTP) to verify your number.
         </p>
 
         <button 
@@ -96,8 +85,18 @@ export default function Login() {
             disabled={isLoading}
             style={{ opacity: isLoading ? 0.7 : 1 }}
         >
-          {isLoading ? 'Sending OTP...' : 'Send OTP'}
+          {isLoading ? 'Sending OTP...' : 'Sign Up'}
         </button>
+
+        <p style={{ marginTop: '20px', textAlign: 'center' }}>
+          Already have an account?{' '}
+          <span 
+             onClick={() => navigate('/login')}
+             style={{ color: '#2874f0', cursor: 'pointer', fontWeight: 'bold' }}
+          >
+            Login
+          </span>
+        </p>
       </div>
     </div>
   )

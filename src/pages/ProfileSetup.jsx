@@ -49,7 +49,7 @@ export default function ProfileSetup() {
 
   const handleSubmit = () => {
     if (validate()) {
-      completeProfile(form.firstName, form.lastName)
+      completeProfile(form.firstName.trim(), form.lastName.trim())
       navigate(redirectPath)
     }
   }

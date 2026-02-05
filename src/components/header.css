@@ -46,7 +46,7 @@
 .header-actions {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 24px;
 }
 
 .header-btn {
@@ -65,9 +65,108 @@
   color: white;
 }
 
-.login-btn {
-  min-width: 80px;
+/* User Dropdown Styles */
+.auth-dropdown {
+  position: relative;
 }
+
+.login-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.login-btn:not(.logged-in) {
+  min-width: 100px;
+}
+
+/* Logged in state: just icon, cleaner var */
+.login-btn.logged-in {
+  min-width: auto;
+  border: 1px solid transparent; 
+  padding: 8px 12px;
+}
+
+.login-btn.logged-in:hover {
+  background: #f5f5f5;
+  color: #000;
+  border-color: #e0e0e0;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 240px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+  padding: 8px 0;
+  border: 1px solid #eee;
+  z-index: 1000;
+}
+
+.dropdown-menu::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 0;
+  width: 100%;
+  height: 10px;
+  background: transparent;
+}
+
+.dropdown-header {
+  padding: 12px 20px;
+  border-bottom: 1px solid #eee;
+  margin-bottom: 8px;
+}
+
+.dropdown-user-label {
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 4px;
+}
+
+.dropdown-user-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: #333;
+  transition: background 0.2s;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+}
+
+.dropdown-divider {
+  height: 1px;
+  background-color: #eee;
+  margin: 8px 0;
+}
+
+/* Logout specific */
+.dropdown-item.text-red {
+    color: #dc2626;
+}
+.dropdown-item.text-red:hover {
+    background-color: #fef2f2;
+}
+
 
 .cart-icon-wrapper {
   display: flex;
@@ -97,6 +196,36 @@
 
 .cart-icon-btn:hover {
   background: #f0f0f0;
+}
+
+/* Sign Up Header Styles */
+.dropdown-header-signup {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 4px;
+}
+
+.new-customer-text {
+  font-size: 0.9rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.signup-link-btn {
+  background: none;
+  border: none;
+  color: #2874f0;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+}
+
+.signup-link-btn:hover {
+  text-decoration: underline;
 }
 
 .cart-badge {

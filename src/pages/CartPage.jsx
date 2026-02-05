@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import './cartPage.css'
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity } = useCart()
+  const { cart, removeFromCart, updateQuantity, addOrder } = useCart()
   const { isLoggedIn, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -79,10 +79,10 @@ export default function CartPage() {
     }
 
     if (validate()) {
-      // In a real app, send data to backend here
-      console.log('Booking Data:', { cart, customer: formData })
+      // Create and store order
+      addOrder(formData)
       localStorage.removeItem('pendingBookingForm')
-      navigate('/confirmation')
+      navigate('/orders', { state: { newBooking: true } })
     }
   }
 

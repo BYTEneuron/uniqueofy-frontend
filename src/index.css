@@ -27,6 +27,15 @@
   transform: translateY(-1px);
 }
 
+.loading-fallback {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80vh;
+  font-size: 1.2rem;
+  color: #666;
+}
+
 a {
   font-weight: 500;
   color: #000000;
