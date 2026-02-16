@@ -1,10 +1,13 @@
 const express = require('express');
-const router = express.Router();
-const { createOrder, getMyOrders, markPaymentReady } = require('../controllers/orderController');
+const { createOrder, getMyOrders, cancelOrder } = require('../controllers/orderController');
 const { protect } = require('../middleware/authMiddleware');
+const validate = require('../middleware/validate');
+const { createOrderSchema } = require('../validators/orderSchemas');
 
-router.post('/create', protect, createOrder);
-router.get('/my', protect, getMyOrders);
-router.post('/:id/mark-payment-ready', markPaymentReady);
+const router = express.Router();
+
+router.post('/', protect, validate(createOrderSchema), createOrder);
+router.get('/myorders', protect, getMyOrders);
+router.put('/:id/cancel', protect, cancelOrder);
 
 module.exports = router;

@@ -1,44 +1,74 @@
 const Order = require('../models/Order');
+const { successResponse, errorResponse } = require('../utils/responseFormatter');
 
-// @desc    Create new booking
-// @route   POST /api/orders/create
+// @desc    Create new order
+// @route   POST /api/orders
 // @access  Private
-const createOrder = async (req, res) => {
-    const { services, serviceDate, address, notes, amount } = req.body;
+const createOrder = async (req, res, next) => {
+  try {
+    const { services, serviceDate, totalAmount } = req.body;
 
-    const order = await Order.create({
-        user: req.user._id,
-        services,
-        serviceDate,
-        address,
-        notes,
-        amount
+    if (!services || services.length === 0) {
+      return errorResponse(res, 'No order items', 'BAD_REQUEST', 400);
+    }
+
+    const order = new Order({
+      user: req.user._id,
+      services,
+      serviceDate,
+      totalAmount,
     });
 
-    res.status(201).json(order);
+    const createdOrder = await order.save();
+
+    successResponse(res, createdOrder, 'Order created successfully', 201);
+  } catch (error) {
+    next(error);
+  }
 };
 
-// @desc    Get logged-in user's bookings
-// @route   GET /api/orders/my
+// @desc    Get logged in user orders
+// @route   GET /api/orders/myorders
 // @access  Private
-const getMyOrders = async (req, res) => {
-    const orders = await Order.find({ user: req.user._id });
-    res.json(orders);
+const getMyOrders = async (req, res, next) => {
+  try {
+    const orders = await Order.find({ user: req.user._id }).sort({ createdAt: -1 });
+    successResponse(res, orders, 'User orders retrieved');
+  } catch (error) {
+    next(error);
+  }
 };
 
-// @desc    Mark payment as ready (Admin simulation)
-// @route   POST /api/orders/:id/mark-payment-ready
-// @access  Public (or Private/Admin)
-const markPaymentReady = async (req, res) => {
+// @desc    Cancel order
+// @route   PUT /api/orders/:id/cancel
+// @access  Private
+const cancelOrder = async (req, res, next) => {
+  try {
     const order = await Order.findById(req.params.id);
 
-    if (order) {
-        order.paymentReady = true;
-        await order.save();
-        res.json(order);
-    } else {
-        res.status(404).json({ message: 'Order not found' });
+    if (!order) {
+      return errorResponse(res, 'Order not found', 'NOT_FOUND', 404);
     }
+
+    if (order.user.toString() !== req.user._id.toString()) {
+      return errorResponse(res, 'Not authorized to cancel this order', 'FORBIDDEN', 403);
+    }
+
+    if (order.status !== 'PENDING') {
+      return errorResponse(res, 'Only pending orders can be cancelled', 'BAD_REQUEST', 400);
+    }
+
+    order.status = 'CANCELLED';
+    const updatedOrder = await order.save();
+
+    successResponse(res, updatedOrder, 'Order cancelled successfully');
+  } catch (error) {
+    next(error);
+  }
 };
 
-module.exports = { createOrder, getMyOrders, markPaymentReady };
+module.exports = {
+  createOrder,
+  getMyOrders,
+  cancelOrder,
+};
