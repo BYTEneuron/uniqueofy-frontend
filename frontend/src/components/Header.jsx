@@ -9,7 +9,7 @@ import cartIcon from '../assets/icons/cart.svg'
 
 export default function Header() {
   const { getServiceCount, clearCart } = useCart()
-  const { isLoggedIn, user, logout } = useAuth()
+  const { isAuthenticated, user, logout } = useAuth()
   const navigate = useNavigate()
   const cartCount = getServiceCount()
   
@@ -78,8 +78,8 @@ export default function Header() {
           {/* User Dropdown Menu */}
           <div className="auth-dropdown" ref={dropdownRef} onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
              <button 
-               className={`header-btn login-btn clickable-hover ${isLoggedIn ? 'logged-in' : ''}`}
-               onClick={() => isLoggedIn ? setDropdownOpen(!dropdownOpen) : handleNavigation('/login')}
+               className={`header-btn login-btn clickable-hover ${isAuthenticated ? 'logged-in' : ''}`}
+               onClick={() => isAuthenticated ? setDropdownOpen(!dropdownOpen) : handleNavigation('/login')}
              >
                 {/* User Icon */}
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -88,7 +88,7 @@ export default function Header() {
                 </svg>
 
                 {/* 'Login' Text - Only if NOT logged in */}
-                {!isLoggedIn && <span>Login</span>}
+                {!isAuthenticated && <span>Login</span>}
 
                 {/* Chevron Down Icon */}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transition: 'transform 0.2s', transform: dropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}>
@@ -99,7 +99,7 @@ export default function Header() {
              {/* Dropdown Content */}
              {dropdownOpen && (
                  <div className="dropdown-menu">
-                    {isLoggedIn ? (
+                    {isAuthenticated ? (
                         <>
                            {/* User Info Header */}
                            <div className="dropdown-header">

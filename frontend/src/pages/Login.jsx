@@ -7,16 +7,16 @@ export default function Login() {
   const [mobile, setMobile] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
-  const { login, isLoggedIn } = useAuth()
+  const { sendOtp, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const redirectPath = location.state?.from || '/'
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isAuthenticated) {
       navigate(redirectPath, { replace: true })
     }
-  }, [isLoggedIn, navigate, redirectPath])
+  }, [isAuthenticated, navigate, redirectPath])
 
   const handleMobileChange = (e) => {
     // Only numbers
@@ -41,28 +41,15 @@ export default function Login() {
     setIsLoading(true)
     setError('')
 
-    // Simulate API call
-    setTimeout(() => {
-        const response = login(mobile)
-        
-        if (response.success) {
-            navigate('/verify-otp', { state: { from: 'login', next: redirectPath } })
-        } else {
-            // Show error and link to signup
-            setIsLoading(false)
-            setError(
-                <span>
-                    No account found with this number.{' '}
-                    <span 
-                        style={{ color: '#2874f0', cursor: 'pointer', fontWeight: 'bold', textDecoration: 'underline' }}
-                        onClick={() => navigate('/signup', { state: { next: redirectPath } })}
-                    >
-                        If you are a new user, please Sign Up.
-                    </span>
-                </span>
-            )
-        }
-    }, 1000)
+    const response = await sendOtp(mobile)
+
+    if (response.success) {
+      setIsLoading(false)
+      navigate('/verify-otp', { state: { phone: mobile, next: redirectPath } })
+    } else {
+      setError(response.message || 'Failed to send OTP')
+      setIsLoading(false)
+    }
   }
 
   return (

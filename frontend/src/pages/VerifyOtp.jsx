@@ -6,21 +6,21 @@ import './auth.css'
 export default function VerifyOtp() {
   const [otp, setOtp] = useState('')
   const [error, setError] = useState('')
-  const { verifyOtp, finalizeLogin, tempPhone, isLoggedIn } = useAuth()
+  const [isLoading, setIsLoading] = useState(false)
+  const { verifyOtp, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   
-  // From state logic
-  const fromFlow = location.state?.from || 'login' // 'login' or 'signup'
+  const phone = location.state?.phone
   const nextPath = location.state?.next || '/'
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (isAuthenticated) {
       navigate(nextPath, { replace: true })
-    } else if (!tempPhone) {
+    } else if (!phone) {
       navigate('/login')
     }
-  }, [tempPhone, isLoggedIn, navigate, nextPath])
+  }, [isAuthenticated, phone, navigate, nextPath])
 
   const handleOtpChange = (e) => {
     // Only numbers
@@ -32,29 +32,27 @@ export default function VerifyOtp() {
     }
   }
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     if (otp.length !== 6) {
       setError('Please enter a 6-digit OTP')
       return
     }
 
-    const isSuccess = verifyOtp(otp)
+    setIsLoading(true)
+    setError('')
+
+    const response = await verifyOtp(phone, otp)
     
-    if (isSuccess) {
-      if (fromFlow === 'login') {
-         // Existing user - log them in directly
-         const loggedIn = finalizeLogin()
-         if (loggedIn) {
-             navigate(nextPath, { replace: true })
-         } else {
-             setError("Error logging in. Please try again.")
-         }
+    if (response.success) {
+      // Check if profile is complete (firstName is a required field for profile completion)
+      if (!response.user.firstName) {
+        navigate('/profile-setup', { state: { next: nextPath } })
       } else {
-         // New user (signup) - go to profile setup
-         navigate('/profile-setup', { state: { from: nextPath } })
+        navigate(nextPath, { replace: true })
       }
     } else {
-      setError('Invalid OTP. Please try again.')
+      setError(response.message || 'Invalid OTP. Please try again.')
+      setIsLoading(false)
     }
   }
 
@@ -64,7 +62,7 @@ export default function VerifyOtp() {
       
       <p style={{ marginBottom: '24px', color: '#666' }}>
         We have sent a verification code to <br />
-        <strong>+91 {tempPhone}</strong>
+        <strong>+91 {phone}</strong>
       </p>
 
       <div className="auth-form">
@@ -77,18 +75,25 @@ export default function VerifyOtp() {
             placeholder="Enter 6-digit OTP (123456)"
             style={{ textAlign: 'center', letterSpacing: '4px', fontSize: '1.2rem' }}
             maxLength="6"
+            disabled={isLoading}
           />
           {error && <div className="auth-error" style={{ textAlign: 'center' }}>{error}</div>}
         </div>
 
-        <button className="auth-btn clickable-hover" onClick={handleVerify}>
-          Verify OTP
+        <button 
+          className="auth-btn clickable-hover" 
+          onClick={handleVerify}
+          disabled={isLoading}
+          style={{ opacity: isLoading ? 0.7 : 1 }}
+        >
+          {isLoading ? 'Verifying...' : 'Verify OTP'}
         </button>
 
         <button 
           className="auth-btn clickable-hover" 
           style={{ background: 'transparent', color: '#666', marginTop: '0', fontWeight: 'normal' }}
           onClick={() => navigate('/login')}
+          disabled={isLoading}
         >
           Change Phone Number
         </button>
