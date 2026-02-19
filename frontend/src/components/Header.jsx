@@ -130,7 +130,7 @@ export default function Header() {
                            <div className="dropdown-header-signup">
                                <span className="new-customer-text">New customer?</span>
                                <button 
-                                   onClick={() => handleNavigation('/signup')} 
+                                   onClick={() => handleNavigation('/login')} 
                                    className="signup-link-btn"
                                >
                                    Sign Up

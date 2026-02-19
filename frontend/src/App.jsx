@@ -12,7 +12,6 @@ const Orders = lazy(() => import('./pages/Orders'))
 const Payment = lazy(() => import('./pages/Payment'))
 const CartPage = lazy(() => import('./pages/CartPage'))
 const Login = lazy(() => import('./pages/Login'))
-const Signup = lazy(() => import('./pages/Signup'))
 const VerifyOtp = lazy(() => import('./pages/VerifyOtp'))
 const ProfileSetup = lazy(() => import('./pages/ProfileSetup'))
 
@@ -31,7 +30,6 @@ function App() {
                 <Route path="/orders" element={<Orders />} />
                 <Route path="/payment" element={<Payment />} />
                 <Route path="/login" element={<Login />} />
-                <Route path="/signup" element={<Signup />} />
                 <Route path="/verify-otp" element={<VerifyOtp />} />
                 <Route path="/profile-setup" element={<ProfileSetup />} />
               </Routes>
@@ -44,3 +42,4 @@ function App() {
 }
 
 export default App
+

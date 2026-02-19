@@ -73,12 +73,17 @@ useEffect(() => {
     }
   };
 
+  const updateUser = (updatedUser) => {
+  setUser(updatedUser);
+  };
+
   const value = useMemo(() => ({
     user,
     isAuthenticated,
     sendOtp,
     verifyOtp,
-    logout
+    logout,
+    updateUser
   }), [user, isAuthenticated]);
 
   return (

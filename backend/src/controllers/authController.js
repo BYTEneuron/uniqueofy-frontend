@@ -234,10 +234,64 @@ const getMe = async (req, res, next) => {
 };
 
 
+// Format name to Proper Case
+const formatName = (name) => {
+  return name
+    .toLowerCase()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+};
+
+
+
+
+// ======================================================
+// UPDATE USER PROFILE
+// ======================================================
+const updateProfile = async (req, res, next) => {
+  try {
+    let { firstName, lastName } = req.body;
+
+    if (!firstName || !lastName) {
+      return errorResponse(
+        res,
+        'First name and last name are required',
+        'MISSING_FIELDS',
+        400
+      );
+    }
+
+    // Trim + normalize casing
+    firstName = formatName(firstName.trim());
+    lastName = formatName(lastName.trim());
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { firstName, lastName },
+      { new: true, runValidators: true }
+    ).select('-refreshToken');
+
+    if (!updatedUser) {
+      return errorResponse(res, 'User not found', 'USER_NOT_FOUND', 404);
+    }
+
+    return successResponse(
+      res,
+      updatedUser,
+      'Profile updated successfully'
+    );
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+
 module.exports = {
   sendOtp,
   verifyOtp,
   refresh,
   logout,
-  getMe
+  getMe,
+  updateProfile
 };

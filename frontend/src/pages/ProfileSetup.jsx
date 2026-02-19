@@ -1,21 +1,26 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import api from '../api/axios'
 import './auth.css'
 
 export default function ProfileSetup() {
   const [form, setForm] = useState({ firstName: '', lastName: '' })
   const [errors, setErrors] = useState({})
-  const { completeProfile, tempPhone } = useAuth()
+  const [loading, setLoading] = useState(false)
+  const [serverError, setServerError] = useState(null)
+  
+  const { user, isAuthenticated, updateUser } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const redirectPath = location.state?.from || '/'
+  const redirectPath = location.state?.next || '/'
+
 
   useEffect(() => {
-    if (!tempPhone) {
+    if (!isAuthenticated) {
       navigate('/login')
     }
-  }, [tempPhone, navigate])
+  }, [isAuthenticated, navigate])
 
   const handleNameChange = (e) => {
     const { name, value } = e.target
@@ -30,6 +35,7 @@ export default function ProfileSetup() {
     if (errors[name]) {
         setErrors(prev => ({ ...prev, [name]: null }))
     }
+    if (serverError) setServerError(null)
   }
 
   const validate = () => {
@@ -47,10 +53,35 @@ export default function ProfileSetup() {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = () => {
-    if (validate()) {
-      completeProfile(form.firstName.trim(), form.lastName.trim())
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    if (!validate()) return
+
+    setLoading(true)
+    setServerError(null)
+
+    try {
+      const { firstName, lastName } = form
+      const response = await api.put('/auth/profile', { 
+        firstName: firstName.trim(), 
+        lastName: lastName.trim() 
+      })
+
+      // Assuming API returns standard response wrapper like { success: true, data: user }
+      // Adjust based on your actual API response structure
+      const updatedUser = response.data.data || response.data
+
+      if (updateUser) {
+        updateUser(updatedUser)
+      }
+
       navigate(redirectPath)
+    } catch (err) {
+      console.error('Profile update failed:', err)
+      const message = err.response?.data?.message || 'Failed to update profile'
+      setServerError(message)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -61,6 +92,12 @@ export default function ProfileSetup() {
         Please enter your details to continue.
       </p>
       
+      {serverError && (
+        <div className="auth-error" style={{ marginBottom: '16px', textAlign: 'center' }}>
+          {serverError}
+        </div>
+      )}
+
       <div className="auth-form">
         <div className="auth-field">
           <label>First Name</label>
@@ -71,6 +108,7 @@ export default function ProfileSetup() {
             value={form.firstName}
             onChange={handleNameChange}
             placeholder="Enter first name"
+            disabled={loading}
           />
           {errors.firstName && <div className="auth-error">{errors.firstName}</div>}
         </div>
@@ -84,12 +122,17 @@ export default function ProfileSetup() {
             value={form.lastName}
             onChange={handleNameChange}
             placeholder="Enter last name"
+            disabled={loading}
           />
           {errors.lastName && <div className="auth-error">{errors.lastName}</div>}
         </div>
 
-        <button className="auth-btn clickable-hover" onClick={handleSubmit}>
-          Continue to Home
+        <button 
+          className="auth-btn clickable-hover" 
+          onClick={handleSubmit}
+          disabled={loading}
+        >
+          {loading ? 'Saving...' : 'Continue to Home'}
         </button>
       </div>
     </div>

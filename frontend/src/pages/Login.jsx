@@ -10,7 +10,7 @@ export default function Login() {
   const { sendOtp, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  const redirectPath = location.state?.from || '/'
+  const redirectPath = location.state?.next || '/'
 
   useEffect(() => {
     if (isAuthenticated) {

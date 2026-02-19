@@ -15,12 +15,11 @@ export default function VerifyOtp() {
   const nextPath = location.state?.next || '/'
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate(nextPath, { replace: true })
-    } else if (!phone) {
+    if (!phone) {
       navigate('/login')
     }
-  }, [isAuthenticated, phone, navigate, nextPath])
+  }, [phone, navigate])
+
 
   const handleOtpChange = (e) => {
     // Only numbers
