@@ -1,3 +1,4 @@
+import { useAuth } from '../context/AuthContext'
 import { useState, useEffect } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import './auth.css'
@@ -5,6 +6,7 @@ import './auth.css'
 export default function Payment() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { isAuthenticated } = useAuth()
   
   // Expect order object from navigation state
   const order = location.state?.order
@@ -15,12 +17,17 @@ export default function Payment() {
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    // Phase E: Payment Page Fixes - Safety Check
-    if (!order) {
-       // If no order in state, redirect back to orders list
-       navigate('/orders', { replace: true })
+    if (!isAuthenticated) {
+      navigate('/login', { replace: true })
+      return
     }
-  }, [order, navigate])
+
+    if (!order) {
+      navigate('/orders', { replace: true })
+    }
+
+  }, [isAuthenticated, order, navigate])
+
 
   const handlePayment = (e) => {
     e.preventDefault()

@@ -5,12 +5,11 @@ import { useAuth } from '../context/AuthContext'
 
 export default function Orders() {
   const { clearCart } = useCart()
-  const { isLoggedIn, user } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   
-  // Use local storage check to prevent premature redirect before AuthContext initializes
-  const hasAuth = isLoggedIn || !!localStorage.getItem('uniqueofy_user')
+
   const isNewBooking = !!location.state?.newBooking
 
   const [showConfirmation, setShowConfirmation] = useState(isNewBooking)
@@ -20,25 +19,24 @@ export default function Orders() {
   const [isLoading, setIsLoading] = useState(true) // Track loading state
 
   useEffect(() => {
-    if (!hasAuth) {
-        navigate('/login')
-        return
+    if (!isAuthenticated) {
+      navigate('/login', { replace: true })
+      return
     }
 
-    // Load existing orders from localStorage and filter by current user
     const savedOrders = JSON.parse(localStorage.getItem('uniqueofy_orders') || '[]')
-    
-    // Filter by user phone if available
-    const currentUserPhone = user?.phone || JSON.parse(localStorage.getItem('uniqueofy_user') || '{}').phone
-    
-    if (currentUserPhone) {
-        const userOrders = savedOrders.filter(o => o.customer?.mobile === currentUserPhone)
-        setOrders(userOrders)
+
+    if (user?.phone) {
+      const userOrders = savedOrders.filter(o => o.customer?.mobile === user.phone)
+      setOrders(userOrders)
     } else {
-        setOrders([])
+      setOrders([])
     }
-    setIsLoading(false) // Data loaded
-  }, [hasAuth, navigate, user])
+
+    setIsLoading(false)
+
+  }, [isAuthenticated, user, navigate])
+
 
   useEffect(() => {
     // Handle new order confirmation flow
@@ -59,10 +57,6 @@ export default function Orders() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showConfirmation, location.pathname, navigate]) // Added stable dependencies
 
-  // Redirect if not authenticated
-  if (!hasAuth) {
-      return null // or a loading spinner while redirecting
-  }
 
   useEffect(() => {
     // TEMPORARY: Replace this timer with admin-controlled payment status in future backend

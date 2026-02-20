@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const { errorResponse } = require('../utils/responseFormatter');
 
 
 
@@ -8,10 +9,8 @@ const protect = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
-        success: false,
-        message: 'Not authorized, no token'
-      });
+      return errorResponse(res, 'Not authorized, no token', 'UNAUTHORIZED', 401);
+
     }
 
     const token = authHeader.split(' ')[1];
@@ -21,20 +20,16 @@ const protect = async (req, res, next) => {
     const user = await User.findById(decoded.id).select('-refreshToken');
 
     if (!user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Not authorized, user not found'
-      });
+      return errorResponse(res, 'Not authorized, user not found', 'UNAUTHORIZED', 401);
+
     }
 
     req.user = user;
     next();
 
   } catch (error) {
-    return res.status(401).json({
-      success: false,
-      message: 'Not authorized, token failed'
-    });
+    return errorResponse(res, 'Not authorized, token failed', 'UNAUTHORIZED', 401);
+
   }
 };
 

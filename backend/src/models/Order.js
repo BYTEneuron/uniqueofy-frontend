@@ -2,12 +2,15 @@ const mongoose = require('mongoose');
 
 const orderSchema = new mongoose.Schema(
   {
+    // 🔐 Owner of the order
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true,
-      index: true, // Optimized for user order lookups
+      index: true,
     },
+
+    // 📦 Services selected
     services: [
       {
         serviceId: {
@@ -21,27 +24,70 @@ const orderSchema = new mongoose.Schema(
         },
         quantity: {
           type: Number,
-          required: true,
           default: 1,
+          min: 1,
         },
       },
     ],
-    bookingDate: {
-      type: Date,
-      default: Date.now,
-    },
+
+    // 📅 Preferred service date
     serviceDate: {
       type: Date,
       required: true,
     },
+
+    timeSlot: {
+      type: String,
+      required: true,
+    },    
+
+    // 📍 Service location details (optional but recommended)
+    address: {
+      type: String,
+      required: true,
+    },
+
+    note: {
+      type: String,
+    },    
+
+    // 📊 Order lifecycle
     status: {
       type: String,
-      enum: ['PENDING', 'CONFIRMED', 'COMPLETED', 'CANCELLED'],
-      default: 'PENDING',
-      index: true, // Optimized for admin filtering
+      enum: [
+        'pending_review',      // user placed booking
+        'quote_in_progress',   // admin reviewing
+        'quote_finalized',     // amount decided
+        'payment_pending',     // waiting for payment
+        'paid',                // payment done
+        'completed',
+        'cancelled',
+      ],
+      default: 'pending_review',
+      index: true,
     },
-    totalAmount: {
+
+    // 💰 Final amount decided by admin
+    finalAmount: {
       type: Number,
+      default: null,
+    },
+
+    // 🔒 Whether admin finalized the amount
+    isAmountFinalized: {
+      type: Boolean,
+      default: false,
+    },
+
+    // 💳 Payment tracking
+    paymentStatus: {
+      type: String,
+      enum: ['unpaid', 'paid'],
+      default: 'unpaid',
+    },
+
+    paidAt: {
+      type: Date,
       default: null,
     },
   },
