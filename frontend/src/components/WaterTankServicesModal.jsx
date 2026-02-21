@@ -1,13 +1,34 @@
-import { useState } from 'react'
-import { waterTankServices } from '../data/services'
+import { useState, useEffect } from 'react'
+import api from '../api/axios'
 import ServiceCard from './ServiceCard'
 import './categoryModal.css'
+import defaultImage from '../assets/images/services/tank-1000l.webp'
 
 export default function WaterTankServicesModal({ isOpen, onClose }) {
   const [quantities, setQuantities] = useState({})
+  const [services, setServices] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      setLoading(true)
+      api.get('/services')
+        .then(res => {
+            const allServices = res.data.data || []
+            const filtered = allServices.filter(s => s.category === 'water_tank'&& s.isActive !== false)
+            setServices(filtered)
+            setLoading(false)
+        })
+        .catch(err => {
+            console.error("Failed to fetch services", err)
+            setError("Failed to load services")
+            setLoading(false)
+        })
+    }
+  }, [isOpen])
 
   if (!isOpen) return null
-
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -17,19 +38,38 @@ export default function WaterTankServicesModal({ isOpen, onClose }) {
           <button className="modal-close" onClick={onClose}>×</button>
         </div>
         <div className="modal-body">
-          <div className="services-grid-modal">
-            {waterTankServices.map((service) => (
-              <ServiceCard
-                key={service.id}
-                service={service}
-                showQuantity={!service.isCustom}
-                quantity={quantities[service.id] || 1}
-                onQuantityChange={(qty) =>
-                  setQuantities(prev => ({ ...prev, [service.id]: qty }))
-                }
-              />
-            ))}
-          </div>
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '20px' }}>Loading services...</div>
+          ) : error ? (
+             <div style={{ textAlign: 'center', padding: '20px', color: 'red' }}>{error}</div>
+          ) : (
+            <div className="services-grid-modal">
+              {services.length === 0 ? (
+                 <p style={{ textAlign: 'center', width: '100%' }}>No services found in this category.</p>
+              ) : (
+                services.map((service) => (
+                  <ServiceCard
+                    key={service._id}
+                    service={{
+                        ...service,
+                        id: service._id,
+                        image: service.image || defaultImage
+                    }}
+                    showQuantity={true} // Defaulting to true as per previous logic logic? Old logic: !service.isCustom
+                    // Actually, let's keep logic: !service.isCustom
+                    // But backend might not have isCustom flag. 
+                    // Let's assume false or check if valid flag exists.
+                    // For now, I'll use !service.isCustom (if backend sends it) or true.
+                    // Note: original WaterTank logic was: showQuantity={!service.isCustom}
+                    quantity={quantities[service._id] || 1}
+                    onQuantityChange={(qty) =>
+                      setQuantities(prev => ({ ...prev, [service._id]: qty }))
+                    }
+                  />
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

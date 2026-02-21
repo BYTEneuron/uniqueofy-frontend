@@ -1,227 +1,240 @@
-import { useState, useEffect } from 'react'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
-import { useCart } from '../context/CartContext'
-import { useAuth } from '../context/AuthContext'
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import api from '../api/axios';
 
 export default function Orders() {
-  const { clearCart } = useCart()
-  const { isAuthenticated, user } = useAuth()
-  const location = useLocation()
-  const navigate = useNavigate()
-  
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
 
-  const isNewBooking = !!location.state?.newBooking
-
-  const [showConfirmation, setShowConfirmation] = useState(isNewBooking)
-  const [showOrders, setShowOrders] = useState(!isNewBooking)
-  const [canPay, setCanPay] = useState(false)
-  const [orders, setOrders] = useState([])
-  const [isLoading, setIsLoading] = useState(true) // Track loading state
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/login', { replace: true })
-      return
+      navigate('/login', { replace: true });
+      return;
     }
 
-    const savedOrders = JSON.parse(localStorage.getItem('uniqueofy_orders') || '[]')
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const { data } = await api.get('/orders/myorders');
+        
+        if (data.success) {
+          setOrders(data.data);
+        } else {
+          setError('Failed to fetch orders.');
+        }
+      } catch (err) {
+        console.error('Order fetch error:', err);
+        setError(err.response?.data?.message || 'Failed to load your orders.');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (user?.phone) {
-      const userOrders = savedOrders.filter(o => o.customer?.mobile === user.phone)
-      setOrders(userOrders)
-    } else {
-      setOrders([])
-    }
+    fetchOrders();
+  }, [isAuthenticated, navigate]);
 
-    setIsLoading(false)
-
-  }, [isAuthenticated, user, navigate])
-
-
-  useEffect(() => {
-    // Handle new order confirmation flow
-    if (showConfirmation) {
-      // Clear cart when showing confirmation (redundant if handled in CartContext, but safe)
-      clearCart()
-      
-      // Auto-switch to orders list after 3 seconds
-      const timer = setTimeout(() => {
-        setShowConfirmation(false)
-        setShowOrders(true)
-        // Properly clear the state
-        navigate(location.pathname, { replace: true, state: {} })
-      }, 3000)
-  
-      return () => clearTimeout(timer)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [showConfirmation, location.pathname, navigate]) // Added stable dependencies
-
-
-  useEffect(() => {
-    // TEMPORARY: Replace this timer with admin-controlled payment status in future backend
-    // Reduced to 2 seconds for better user experience during demo
-    const timer = setTimeout(() => setCanPay(true), 2000)
-    return () => clearTimeout(timer)
-  }, [])
-
-  const handlePaymentClick = () => {
-    if (!canPay) {
-      alert("You can pay after charges are discussed with our team.")
-    } else {
-      navigate('/payment', { state: { order: orders[0] } })
-    }
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px', fontSize: '1.2rem', color: '#666' }}>
+        Loading your orders...
+      </div>
+    );
   }
 
-  // Display 'Booking Confirmed' overlay
-  // We use conditional rendering below instead of early return
-  
-  return (
-    <div style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px' }}>
-       
-       {showConfirmation && (
-          <div style={{
-            position: 'fixed',
-            top: 0, 
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: '#fff',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-            padding: '20px',
-            textAlign: 'center'
-           }}>
-              <div style={{ fontSize: '4rem', marginBottom: '20px' }}>🎉</div>
-              <h1 style={{ fontSize: '2rem', marginBottom: '1rem', color: '#000' }}>Booking Confirmed!</h1>
-              <p style={{ fontSize: '1.2rem', color: '#666', maxWidth: '600px', lineHeight: '1.5' }}>
-                Our team will contact you shortly to confirm details and discuss pricing.
-              </p>
-           </div>
-       )}
+  if (error) {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px', color: '#e53935', fontSize: '1.2rem' }}>
+        {error}
+      </div>
+    );
+  }
 
-       {showOrders && isLoading ? (
-          <div style={{ padding: '60px 20px', textAlign: 'center', color: '#666' }}>
-              Loading your orders...
-          </div>
-       ) : showOrders && orders.length === 0 ? (
-          <div style={{ padding: '60px 20px', textAlign: 'center', maxWidth: '800px', margin: '0 auto' }}>
-              <h2>No orders found</h2>
-              <p style={{ color: '#666', marginBottom: '20px' }}>You haven't placed any bookings yet.</p>
-              <Link 
-                to="/" 
-                style={{ 
-                    display: 'inline-block',
-                    backgroundColor: '#000',
-                    color: '#fff',
-                    padding: '12px 24px',
-                    borderRadius: '8px',
-                    textDecoration: 'none',
-                    fontWeight: '600'
-                }}
-              >
-                Go to Home
-              </Link>
-          </div>
-       ) : showOrders && (
-         <>
-           <h1 style={{ marginBottom: '30px', fontSize: '2rem' }}>My Orders</h1>
-       
-           {orders.map((order, index) => (
-               <div key={index} style={{ 
-                  backgroundColor: '#fff', 
-                  borderRadius: '12px', 
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
-                  padding: '30px',
-                  marginBottom: '30px',
-                  border: '1px solid #eee'
-               }}>
-                 {/* Order Details Header */}
-                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f0f0f0', paddingBottom: '20px', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
-                    <div>
-                       <h3 style={{ margin: 0, fontSize: '1.2rem' }}>Order #{order.id}</h3>
-                       <p style={{ color: '#888', margin: '5px 0 0 0', fontSize: '0.9rem' }}>
-                        Placed on {new Date(order.orderDate).toLocaleDateString()}
-                       </p>
+  if (orders.length === 0) {
+    return (
+      <div style={{ maxWidth: '800px', margin: '40px auto', padding: '60px 20px', backgroundColor: '#f9f9f9', borderRadius: '8px', textAlign: 'center' }}>
+        <h2 style={{ color: '#333', marginBottom: '10px' }}>You have no bookings yet.</h2>
+        <p style={{ color: '#666', marginBottom: '20px' }}>Explore our services and book your first appointment!</p>
+        <button 
+          onClick={() => navigate('/')}
+          style={{
+            backgroundColor: '#1976D2',
+            color: 'white',
+            border: 'none',
+            padding: '10px 20px',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '1rem'
+          }}
+        >
+          Explore Services
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px', fontFamily: 'Arial, sans-serif' }}>
+      <h1 style={{ marginBottom: '30px', textAlign: 'center', color: '#333' }}>My Bookings</h1>
+      
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        {orders.map((order) => {
+           const statusColors = getStatusColor(order.status);
+           return (
+            <div 
+              key={order._id} 
+              style={{ 
+                border: '1px solid #e0e0e0', 
+                borderRadius: '12px', 
+                padding: '24px',
+                backgroundColor: '#fff',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.05)',
+                transition: 'transform 0.2s',
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px', borderBottom: '1px solid #f0f0f0', paddingBottom: '15px' }}>
+                <div>
+                  <span style={{ fontWeight: '600', color: '#555', fontSize: '0.9rem', display: 'block' }}>Order ID</span>
+                  <span style={{ color: '#333', fontSize: '1rem', fontFamily: 'monospace' }}>#{order._id.slice(-6).toUpperCase()}</span>
+                </div>
+                <div style={{ 
+                  padding: '6px 12px', 
+                  borderRadius: '20px', 
+                  fontSize: '0.85rem', 
+                  fontWeight: 'bold',
+                  backgroundColor: statusColors.bg,
+                  color: statusColors.text,
+                  border: `1px solid ${statusColors.text}`
+                }}>
+                  {order.status}
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+                <div>
+                  <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '4px' }}>Service Date</div>
+                  <div style={{ fontWeight: '500', color: '#333' }}>
+                    {order.serviceDate ? new Date(order.serviceDate).toLocaleDateString(undefined, { 
+                      weekday: 'short', 
+                      year: 'numeric', 
+                      month: 'short', 
+                      day: 'numeric' 
+                    }) : 'Not scheduled'}
+                  </div>
+                </div>
+                
+                {order.timeSlot && (
+                  <div>
+                    <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '4px' }}>Time Slot</div>
+                    <div style={{ fontWeight: '500', color: '#333' }}>{order.timeSlot}</div>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                  <div style={{ fontSize: '0.85rem', color: '#888', marginBottom: '4px' }}>Address</div>
+                  <div style={{ fontWeight: '500', lineHeight: '1.5', color: '#333' }}>
+                    {formatAddress(order.address)}
+                  </div>
+              </div>
+
+              <div style={{ backgroundColor: '#f9fafb', padding: '16px', borderRadius: '8px', marginBottom: '20px' }}>
+                <div style={{ fontSize: '0.9rem', fontWeight: 'bold', marginBottom: '12px', color: '#444' }}>Services</div>
+                {order.services && order.services.map((item, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', fontSize: '0.95rem', borderBottom: idx !== order.services.length - 1 ? '1px dashed #eee' : 'none', paddingBottom: idx !== order.services.length - 1 ? '8px' : '0' }}>
+                    <span style={{ color: '#333' }}>{item.name}</span>
+                    <span style={{ color: '#666', fontWeight: '500' }}><span>× {item.quantity}</span></span>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '20px' }}>
+                {order.isAmountFinalized && order.paymentStatus !== 'paid' ? (
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 'bold', color: '#333' }}>
+                      To Pay: <span style={{ color: '#2E7D32' }}><span>₹{order.finalAmount}</span></span>
                     </div>
-                    {/* Status Badge */}
-                    <div style={{ 
-                       backgroundColor: '#e8f5e9', 
-                       color: '#2e7d32', 
-                       padding: '6px 12px', 
-                       borderRadius: '20px', 
-                       fontSize: '0.9rem', 
-                       fontWeight: '600',
-                       height: 'fit-content'
-                    }}>
-                       {order.status || 'Pending Quote'}
-                    </div>
-                 </div>
-        
-                 {/* Services List */}
-                 <div style={{ marginBottom: '30px' }}>
-                    <h4 style={{ marginBottom: '15px', fontSize: '1rem', color: '#000' }}>Services Booked</h4>
-                    {order.items && order.items.map((item, idx) => (
-                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', paddingBottom: '12px', borderBottom: index === (order.items.length - 1) ? 'none' : '1px solid #fafafa' }}>
-                            <span style={{ color: '#333' }}>{item.name}</span>
-                            <span style={{ fontWeight: '600' }}>x{item.quantity}</span>
-                        </div>
-                    ))}
-                 </div>
-        
-                 {/* Booking Details */}
-                 <div style={{ backgroundColor: '#f9f9f9', padding: '20px', borderRadius: '8px', marginBottom: '25px' }}>
-                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '20px' }}>
-                        <div>
-                           <p style={{ color: '#666', marginBottom: '5px', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Preferred Date</p>
-                           <p style={{ fontWeight: '600', margin: 0 }}>{order.customer?.date || 'N/A'}</p>
-                        </div>
-                        <div>
-                           <p style={{ color: '#666', marginBottom: '5px', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Preferred Time</p>
-                           <p style={{ fontWeight: '600', margin: 0 }}>{order.customer?.timeSlot || 'Not specified'}</p> 
-                        </div>
-                     </div>
-                 </div>
-        
-                 {/* Message & Payment Action (Only for the latest order) */}
-                 {index === 0 && (
-                     <>
-                         <div style={{ textAlign: 'center', color: '#666', fontStyle: 'italic', marginBottom: '25px', padding: '0 20px' }}>
-                            "Our team will call you to discuss final charges before payment."
-                         </div>
-            
-                         <button
-                            onClick={handlePaymentClick}
-                            className={canPay ? "clickable-hover" : ""}
-                            style={{
-                                width: '100%',
-                                padding: '16px',
-                                backgroundColor: canPay ? '#000' : '#e0e0e0',
-                                color: canPay ? '#fff' : '#a0a0a0',
-                                border: 'none',
-                                borderRadius: '8px',
-                                fontSize: '1rem',
-                                fontWeight: '600',
-                                cursor: canPay ? 'pointer' : 'not-allowed',
-                                transition: 'all 0.3s ease',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                gap: '10px'
-                            }}
-                         >
-                            Proceed to Payment
-                            {!canPay && <span style={{ fontSize: '0.8rem', fontWeight: 'normal' }}>(Checking status...)</span>}
-                         </button>
-                     </>
-                 )}
-               </div>
-           ))}
-         </>
-       )}
+                    <button style={{
+                      backgroundColor: '#2E7D32',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '6px',
+                      fontSize: '1rem',
+                      cursor: 'pointer',
+                      fontWeight: '600',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                      transition: 'background-color 0.2s',
+                    }}
+                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#1B5E20'}
+                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#2E7D32'}
+                    >
+                      Proceed to Payment
+                    </button>
+                   </div>
+                ) : (
+                  <div style={{ 
+                    color: '#0277BD', 
+                    backgroundColor: '#E1F5FE', 
+                    padding: '12px 16px', 
+                    borderRadius: '6px', 
+                    fontSize: '0.95rem', 
+                    display: 'flex', 
+                    alignItems: 'center',
+                  }}>
+                    <span style={{ marginRight: '10px', fontSize: '1.2rem' }}>??</span> 
+                    Pricing will be finalized after inspection.
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
     </div>
-  )
+  );
 }
+
+// Helper to format address object or string
+function formatAddress(addr) {
+  if (!addr) return 'No address provided';
+  if (typeof addr === 'string') return addr;
+  // Handle different potential address structures
+  return [
+    addr.street,
+    addr.city,
+    addr.state,
+    addr.zip
+  ].filter(Boolean).join(', ') || 'Address details unavailable';
+}
+
+// Helper for status badge colors
+function getStatusColor(status) {
+  switch (status) {
+    case 'pending_review':
+      return { bg: '#FFF3E0', text: '#EF6C00' };
+
+    case 'quote_in_progress':
+      return { bg: '#E3F2FD', text: '#1565C0' };
+
+    case 'quote_finalized':
+      return { bg: '#E8F5E9', text: '#2E7D32' };
+
+    case 'paid':
+      return { bg: '#E8F5E9', text: '#1B5E20' };
+
+    case 'completed':
+      return { bg: '#E8F5E9', text: '#2E7D32' };
+
+    case 'cancelled':
+      return { bg: '#FFEBEE', text: '#C62828' };
+
+    default:
+      return { bg: '#F5F5F5', text: '#616161' };
+  }
+}
+

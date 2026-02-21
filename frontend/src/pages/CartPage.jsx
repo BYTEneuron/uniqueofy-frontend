@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
+import api from '../api/axios'
 import './cartPage.css'
 
 export default function CartPage() {
-  const { cart, removeFromCart, updateQuantity, addOrder } = useCart()
-  const { isLoggedIn, user } = useAuth()
+  const { cart, removeFromCart, updateQuantity, clearCart } = useCart()
+  const { user, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -18,7 +19,9 @@ export default function CartPage() {
     timeSlot: '',
     instructions: ''
   })
-
+  
+  const [loading, setLoading] = useState(false)
+  const [submissionError, setSubmissionError] = useState(null)
   const [errors, setErrors] = useState({})
 
   const handleChange = (e) => {
@@ -64,25 +67,62 @@ export default function CartPage() {
     }
 
     if (!formData.address.trim()) newErrors.address = 'Address is required'
-    if (!formData.date) newErrors.date = 'Preferred Date is required'
+    if (!formData.date) {
+      newErrors.date = 'Preferred Date is required'
+    } else {
+      const selectedDate = new Date(formData.date)
+      const todayDate = new Date()
+      todayDate.setHours(0, 0, 0, 0)
+
+      if (selectedDate < todayDate) {
+        newErrors.date = 'Past dates are not allowed'
+      }
+    }
     if (!formData.timeSlot) newErrors.timeSlot = 'Please select a preferred time slot'
     
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = () => {
-    if (!isLoggedIn) {
+  const handleSubmit = async () => {
+    // If user is not authenticated, redirect to login
+    // Note: checking isLoggedIn (from user object) or isAuthenticated (state) depending on context
+    // Assuming context provides isAuthenticated as per AuthContext code read earlier
+    if (!isAuthenticated) { 
       localStorage.setItem('pendingBookingForm', JSON.stringify(formData))
       navigate('/login', { state: { from: location.pathname } })
       return
     }
 
     if (validate()) {
-      // Create and store order
-      addOrder(formData)
-      localStorage.removeItem('pendingBookingForm')
-      navigate('/orders', { state: { newBooking: true } })
+      setLoading(true)
+      setSubmissionError(null)
+
+      try {
+        const payload = {
+          services: cart.map(item => ({
+             serviceId: item.id,
+             name: item.name,
+             quantity: item.quantity
+          })),
+          serviceDate: formData.date,
+          timeSlot: formData.timeSlot,
+          address: formData.address,
+          note: formData.instructions
+        }
+
+        await api.post('/orders', payload)
+        
+        clearCart()
+        localStorage.removeItem('pendingBookingForm')
+        navigate('/orders', { state: { newBooking: true } })
+
+      } catch (error) {
+        console.error('Order submission failed:', error)
+        setSubmissionError(error.response?.data?.message || 'Failed to submit order. Please try again.')
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -98,13 +138,24 @@ export default function CartPage() {
 
   // Pre-fill mobile number if logged in
   useEffect(() => {
-    if (isLoggedIn && user?.phone) {
-      setFormData(prev => ({ ...prev, mobile: user.phone }))
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        mobile: user.phone || '',
+        fullName: `${user.firstName || ''} ${user.lastName || ''}`.trim()
+      }))
     }
-  }, [isLoggedIn, user])
+  }, [user])
 
   // Get today's date for min attribute
-  const today = new Date().toISOString().split('T')[0]
+  const getTodayLocal = () => {
+    const now = new Date()
+    const offset = now.getTimezoneOffset()
+    const local = new Date(now.getTime() - offset * 60 * 1000)
+    return local.toISOString().split('T')[0]
+  }
+
+  const today = getTodayLocal()
 
   return (
     <div className="cart-page">
@@ -185,6 +236,7 @@ export default function CartPage() {
             className="form-control"
             value={formData.fullName}
             onChange={handleChange}
+            disabled={!!user}
           />
           {errors.fullName && <div className="inline-error">{errors.fullName}</div>}
         </div>
@@ -197,10 +249,10 @@ export default function CartPage() {
               type="tel"
               name="mobile"
               maxLength="10"
-              pattern="[0-9]{10}"
               className="form-control"
               value={formData.mobile}
               onChange={handleChange}
+              disabled={!!user}
             />
           </div>
           {errors.mobile && <div className="inline-error">{errors.mobile}</div>}
@@ -248,8 +300,19 @@ export default function CartPage() {
       </div>
 
       <div className="cart-page-footer">
-        <button className="confirm-btn clickable-hover" onClick={handleSubmit}>
-          Confirm Booking Request
+        {submissionError && (
+          <div className="inline-error" style={{ marginBottom: '10px', textAlign: 'center' }}>
+            {submissionError}
+          </div>
+        )}
+
+        <button 
+          className="confirm-btn clickable-hover" 
+          onClick={handleSubmit} 
+          disabled={loading}
+          style={{ opacity: loading ? 0.7 : 1 }}
+        >
+          {loading ? 'Processing...' : 'Confirm Booking Request'}
         </button>
       </div>
         </>

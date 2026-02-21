@@ -1,28 +1,42 @@
 const mongoose = require('mongoose');
 
-const serviceSchema = mongoose.Schema(
+const serviceSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
-      unique: true, // Ensuring unique service names at DB level
+      trim: true,
+      unique: true, // Prevent duplicate services
     },
+
     description: {
       type: String,
       required: true,
+      trim: true,
     },
+
     category: {
       type: String,
+      enum: ['ac', 'water_tank'],
       required: true,
+      index: true, // Faster category filtering
     },
-    price: { // Adding price as it's essential for orders
-        type: Number,
-        required: true,
-        default: 0
+
+    duration: {
+      type: String,
+      required: true,
+      trim: true,
     },
+
+    isCustom: {
+      type: Boolean,
+      default: false, // Custom request cards
+    },
+
     isActive: {
       type: Boolean,
       default: true,
+      index: true, // Allows soft delete & fast filtering
     },
   },
   {
@@ -30,6 +44,4 @@ const serviceSchema = mongoose.Schema(
   }
 );
 
-const Service = mongoose.model('Service', serviceSchema);
-
-module.exports = Service;
+module.exports = mongoose.model('Service', serviceSchema);

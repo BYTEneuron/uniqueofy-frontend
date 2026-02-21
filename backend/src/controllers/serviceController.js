@@ -6,7 +6,10 @@ const { successResponse, errorResponse } = require('../utils/responseFormatter')
 // @access  Public
 const getServices = async (req, res, next) => {
   try {
-    const services = await Service.find({ isActive: true });
+    const services = await Service
+      .find({ isActive: true })
+      .sort({ category: 1, createdAt: 1 });
+      
     successResponse(res, services, 'Services retrieved');
   } catch (error) {
     next(error);
@@ -35,7 +38,7 @@ const getServiceById = async (req, res, next) => {
 // @access  Private/Admin
 const createService = async (req, res, next) => {
   try {
-    const { name, description, category, isActive } = req.body;
+    const { name, description, category, duration, isCustom, isActive } = req.body;
 
     // Check for duplicate service name
     const serviceExists = await Service.findOne({ name });
@@ -47,7 +50,9 @@ const createService = async (req, res, next) => {
       name,
       description,
       category,
-      isActive,
+      duration,
+      isCustom: isCustom || false,
+      isActive: isActive ?? true,
     });
 
     const createdService = await service.save();
@@ -62,8 +67,7 @@ const createService = async (req, res, next) => {
 // @access  Private/Admin
 const updateService = async (req, res, next) => {
   try {
-    const { name, description, category, isActive } = req.body;
-
+    const { name, description, category, duration, isCustom, isActive } = req.body;
     const service = await Service.findById(req.params.id);
 
     if (!service) {
@@ -81,6 +85,9 @@ const updateService = async (req, res, next) => {
     service.name = name || service.name;
     service.description = description || service.description;
     service.category = category || service.category;
+    service.duration = duration || service.duration;
+
+    if (isCustom !== undefined) service.isCustom = isCustom;
     if (isActive !== undefined) service.isActive = isActive;
 
     const updatedService = await service.save();
