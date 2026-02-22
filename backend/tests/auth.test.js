@@ -14,12 +14,12 @@ describe('Auth Endpoints', () => {
 
       expect(res.statusCode).toEqual(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data).toHaveProperty('token');
+      expect(res.body.data).toHaveProperty('accessToken');
       expect(res.body.data.user.phone).toBe('9988776655');
       expect(res.body.data.user.role).toBe('user');
     });
 
-    it('should login as admin with specific phone number', async () => {
+    it('should register any new phone as a regular user', async () => {
       const res = await request(app)
         .post('/api/auth/verify-otp')
         .send({
@@ -29,8 +29,7 @@ describe('Auth Endpoints', () => {
 
       expect(res.statusCode).toEqual(200);
       expect(res.body.success).toBe(true);
-      expect(res.body.data.user.role).toBe('admin');
-      expect(res.body.data.user.firstName).toBe('Dheeraj');
+      expect(res.body.data.user.role).toBe('user');
     });
 
     it('should reject invalid OTP', async () => {
@@ -67,7 +66,7 @@ describe('Auth Endpoints', () => {
         .post('/api/auth/verify-otp')
         .send({ phone: '9988776655', otp: '123456' });
       
-      const token = authRes.body.data.token;
+      const token = authRes.body.data.accessToken;
 
       const res = await request(app)
         .get('/api/auth/me')

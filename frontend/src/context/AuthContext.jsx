@@ -36,7 +36,10 @@ useEffect(() => {
       console.error('Send OTP failed:', error);
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Failed to send OTP' 
+        message: error.response?.data?.message || 'Failed to send OTP',
+        error: error.response?.data?.error || null,
+        status: error.response?.status || null,
+        data: error.response?.data?.data || null,
       };
     }
   };

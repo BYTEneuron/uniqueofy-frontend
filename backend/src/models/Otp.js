@@ -19,9 +19,17 @@ const otpSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    resendCount: {
+    otpRequestCount: {
       type: Number,
-      default: 0,
+      default: 1,
+    },
+    firstRequestAt: {
+      type: Date,
+      default: Date.now,
+    },
+    lastRequestAt: {
+      type: Date,
+      default: Date.now,
     },
   },
   {

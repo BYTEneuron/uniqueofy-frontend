@@ -10,6 +10,24 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [cancellingId, setCancellingId] = useState(null);
+
+  const handleCancel = async (order) => {
+    if (!window.confirm('Are you sure you want to cancel this booking?')) return;
+    try {
+      setCancellingId(order._id);
+      await api.put(`/orders/${order._id}/cancel`);
+      setOrders(prev =>
+        prev.map(o =>
+          o._id === order._id ? { ...o, status: 'cancelled' } : o
+        )
+      );
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to cancel order');
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -176,7 +194,7 @@ export default function Orders() {
                       Proceed to Payment
                     </button>
                    </div>
-                ) : (
+                ) : order.status === 'pending_review' ? (
                   <div style={{ 
                     color: '#0277BD', 
                     backgroundColor: '#E1F5FE', 
@@ -189,8 +207,34 @@ export default function Orders() {
                     <span style={{ marginRight: '10px', fontSize: '1.2rem' }}>??</span> 
                     Pricing will be finalized after inspection.
                   </div>
-                )}
+                ) : null}
               </div>
+
+              {order.status === 'pending_review' && (
+                <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
+                  <button
+                    disabled={cancellingId === order._id}
+                    onClick={() => handleCancel(order)}
+                    style={{
+                      backgroundColor: cancellingId === order._id ? '#E57373' : '#C62828',
+                      color: 'white',
+                      border: 'none',
+                      padding: '12px 24px',
+                      borderRadius: '6px',
+                      fontSize: '1rem',
+                      cursor: cancellingId === order._id ? 'not-allowed' : 'pointer',
+                      fontWeight: '600',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                      transition: 'background-color 0.2s',
+                      opacity: cancellingId === order._id ? 0.7 : 1,
+                    }}
+                    onMouseOver={(e) => { if (cancellingId !== order._id) e.currentTarget.style.backgroundColor = '#B71C1C'; }}
+                    onMouseOut={(e) => { if (cancellingId !== order._id) e.currentTarget.style.backgroundColor = '#C62828'; }}
+                  >
+                    {cancellingId === order._id ? 'Cancelling...' : 'Cancel Booking'}
+                  </button>
+                </div>
+              )}
             </div>
           );
         })}

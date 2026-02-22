@@ -5,7 +5,6 @@ const jwt = require('jsonwebtoken');
 
 const { generateAccessToken, generateRefreshToken } = require('../utils/token');
 const { successResponse, errorResponse } = require('../utils/responseFormatter');
-const { ADMIN_DEFAULTS } = require('../config/constants');
 const otpService = require('../services/otp');
 
 
@@ -20,8 +19,54 @@ const sendOtp = async (req, res, next) => {
       return errorResponse(res, 'Invalid phone number (10 digits required)', 'INVALID_PHONE', 400);
     }
 
+    // Rate limit check
+    const windowMinutes = parseInt(process.env.OTP_RATE_LIMIT_WINDOW) || 5;
+    const maxRequests = parseInt(process.env.OTP_RATE_LIMIT_MAX) || 3;
+    const minGapSeconds = parseInt(process.env.OTP_MIN_GAP_SECONDS) || 20;
+    const existingOtp = await Otp.findOne({ phone });
+
+    let currentRequestCount = 1;
+    let currentFirstRequestAt = new Date();
+
+    if (existingOtp) {
+      // A) Enforce minimum gap between requests
+      const secondsSinceLast =
+        (Date.now() - new Date(existingOtp.lastRequestAt).getTime()) / 1000;
+
+      if (secondsSinceLast < minGapSeconds) {
+        const retryAfter = Math.ceil(minGapSeconds - secondsSinceLast);
+        return errorResponse(
+          res,
+          `Please wait ${retryAfter} seconds before requesting another OTP.`,
+          'OTP_COOLDOWN',
+          429,
+          { retryAfter }
+        );
+      }
+
+      // B) Enforce max requests within time window
+      const elapsed = Date.now() - new Date(existingOtp.firstRequestAt).getTime();
+      const windowMs = windowMinutes * 60 * 1000;
+
+      if (elapsed < windowMs) {
+        if (existingOtp.otpRequestCount >= maxRequests) {
+          const retryAfter = Math.ceil((windowMs - elapsed) / 1000);
+          return errorResponse(
+            res,
+            'Maximum OTP requests reached. Try again later.',
+            'OTP_RATE_LIMIT',
+            429,
+            { retryAfter }
+          );
+        }
+        currentRequestCount = existingOtp.otpRequestCount + 1;
+        currentFirstRequestAt = existingOtp.firstRequestAt;
+      }
+      // If window expired, counters reset to defaults (1 / now)
+    }
+
     // Remove previous OTP
-    await Otp.deleteMany({ phone });
+    await Otp.deleteOne({ phone });
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
@@ -34,7 +79,10 @@ const sendOtp = async (req, res, next) => {
       phone,
       otpHash,
       expiresAt: new Date(Date.now() + expiryMinutes * 60 * 1000),
-      attempts: 0
+      attempts: 0,
+      otpRequestCount: currentRequestCount,
+      firstRequestAt: currentFirstRequestAt,
+      lastRequestAt: new Date(),
     });
 
     await otpService.sendOtp(phone, otp);
@@ -90,22 +138,8 @@ const verifyOtp = async (req, res, next) => {
     // Find or create user
     let user = await User.findOne({ phone });
 
-    if (phone === ADMIN_DEFAULTS.PHONE) {
-      if (!user) {
-        user = await User.create({
-          phone,
-          firstName: ADMIN_DEFAULTS.FIRST_NAME,
-          lastName: ADMIN_DEFAULTS.LAST_NAME,
-          role: 'admin',
-        });
-      } else if (user.role !== 'admin') {
-        user.role = 'admin';
-        await user.save();
-      }
-    } else {
-      if (!user) {
-        user = await User.create({ phone });
-      }
+    if (!user) {
+      user = await User.create({ phone });
     }
 
     if (!user.isActive) {

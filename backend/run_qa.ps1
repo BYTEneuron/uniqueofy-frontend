@@ -22,9 +22,11 @@ Write-Host "`n🚀 STARTING BACKEND QA SUITE...`n" -ForegroundColor Cyan
 Write-Host "--- AUTHENTICATION ---" -ForegroundColor Cyan
 
 # 1.1 Admin Login
+# NOTE: Admin must be pre-seeded in the database with role 'admin'.
+# Auto-admin promotion via phone number has been removed for security.
 try {
     $adminRes = Invoke-RestMethod -Uri "$BaseUrl/auth/verify-otp" -Method Post -Body '{"phone":"0000000000","otp":"123456"}' -ContentType "application/json"
-    $adminToken = $adminRes.data.token
+    $adminToken = $adminRes.data.accessToken
     Log-Result "Admin Login" ($null -ne $adminToken)
 } catch {
     Log-Result "Admin Login" $false $_.Exception.Message
@@ -34,7 +36,7 @@ try {
 # 1.2 User Login
 try {
     $userRes = Invoke-RestMethod -Uri "$BaseUrl/auth/verify-otp" -Method Post -Body '{"phone":"9876543210","otp":"123456"}' -ContentType "application/json"
-    $userToken = $userRes.data.token
+    $userToken = $userRes.data.accessToken
     Log-Result "User Login" ($null -ne $userToken)
 } catch {
     Log-Result "User Login" $false $_.Exception.Message

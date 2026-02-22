@@ -3,10 +3,24 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import './auth.css'
 
+const COOLDOWN_KEY = 'otp_cooldown_until'
+
+function getRemainingCooldown() {
+  const until = localStorage.getItem(COOLDOWN_KEY)
+  if (!until) return 0
+  const remaining = Math.ceil((parseInt(until) - Date.now()) / 1000)
+  if (remaining <= 0) {
+    localStorage.removeItem(COOLDOWN_KEY)
+    return 0
+  }
+  return remaining
+}
+
 export default function Login() {
   const [mobile, setMobile] = useState('')
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [cooldown, setCooldown] = useState(() => getRemainingCooldown())
   const { sendOtp, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
@@ -17,6 +31,23 @@ export default function Login() {
       navigate(redirectPath, { replace: true })
     }
   }, [isAuthenticated, navigate, redirectPath])
+
+  useEffect(() => {
+    if (cooldown <= 0) {
+      localStorage.removeItem(COOLDOWN_KEY)
+      return
+    }
+    const timer = setInterval(() => {
+      const remaining = getRemainingCooldown()
+      if (remaining <= 0) {
+        setCooldown(0)
+        clearInterval(timer)
+      } else {
+        setCooldown(remaining)
+      }
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [cooldown > 0])
 
   const handleMobileChange = (e) => {
     // Only numbers
@@ -47,6 +78,11 @@ export default function Login() {
       setIsLoading(false)
       navigate('/verify-otp', { state: { phone: mobile, next: redirectPath } })
     } else {
+      if (response.status === 429 && response.data?.retryAfter) {
+        const retryAfter = response.data.retryAfter
+        localStorage.setItem(COOLDOWN_KEY, String(Date.now() + retryAfter * 1000))
+        setCooldown(retryAfter)
+      }
       setError(response.message || 'Failed to send OTP')
       setIsLoading(false)
     }
@@ -80,10 +116,10 @@ export default function Login() {
         <button 
             className="auth-btn clickable-hover" 
             onClick={handleSendOtp}
-            disabled={isLoading}
-            style={{ opacity: isLoading ? 0.7 : 1 }}
+            disabled={isLoading || cooldown > 0}
+            style={{ opacity: (isLoading || cooldown > 0) ? 0.7 : 1 }}
         >
-          {isLoading ? 'Sending OTP...' : 'Send OTP'}
+          {isLoading ? 'Sending OTP...' : cooldown > 0 ? <span style={{ color: '#d32f2f' }}>{`Try again in ${Math.floor(cooldown / 60)}:${String(cooldown % 60).padStart(2, '0')}`}</span> : 'Send OTP'}
         </button>
       </div>
     </div>
